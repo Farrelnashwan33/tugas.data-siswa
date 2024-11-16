@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Mahasiswa</title>
+    <style>
+        /* Latar Belakang dengan Gambar */
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('/img/London\ eye.jpeg'); /* Ganti URL ini dengan gambar latar yang diinginkan */
+            background-size: cover;
+            background-position: center;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: auto;
+            color: #333;
+        }
+        /* Kontainer Utama */
+        .container {
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(255, 255, 255, 0.425);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .text-center {
+            text-align: center;
+        }
+        /* Tabel */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .table th, .table td {
+            padding: 12px;
+            border: 1px solid #2b2727;
+            text-align: left;
+        }
+        .table th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .table tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        /* Form & Tombol */
+        #formContainer, #search {
+            display: flex;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        #formContainer input, #formContainer button, #search {
+            margin-right: 10px;
+            padding: 8px;
+            flex: 1 1 150px;
+        }
+        button {
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-center">Daftar Mahasiswa</h1>
+        
+        <!-- Form Tambah / Edit Mahasiswa -->
+        <div id="formContainer">
+            <input type="text" id="nama" placeholder="Nama">
+            <input type="text" id="nim" placeholder="NIM">
+            <input type="text" id="jurusan" placeholder="Jurusan">
+            <input type="number" id="umur" placeholder="Umur">
+            <button onclick="addOrUpdateMahasiswa()">Simpan</button>
+            <button onclick="clearForm()">Batal</button>
+        </div>
+
+        <!-- Pencarian Mahasiswa -->
+        <input type="text" id="search" placeholder="Cari Mahasiswa..." onkeyup="searchMahasiswa()">
+
+        <!-- Tabel Daftar Mahasiswa -->
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Nama</th>
+                    <th>NIM</th>
+                    <th>Jurusan</th>
+                    <th>Umur</th>
+                    <th>Aksi</th>
+                </tr>
+            </thead>
+            <tbody id="mahasiswaTableBody">
+                <!-- Data akan dimuat di sini -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        let mahasiswaData = JSON.parse(localStorage.getItem('mahasiswaData')) || [];
+        let editingIndex = -1;  // Untuk melacak apakah dalam mode edit
+
+        // Tampilkan data mahasiswa saat halaman dimuat
+        window.onload = function () {
+            displayMahasiswa();
+        };
+
+        // Fungsi menambahkan atau memperbarui mahasiswa
+        function addOrUpdateMahasiswa() {
+            const nama = document.getElementById('nama').value;
+            const nim = document.getElementById('nim').value;
+            const jurusan = document.getElementById('jurusan').value;
+            const umur = document.getElementById('umur').value;
+
+            if (nama && nim && jurusan && umur) {
+                const mahasiswa = { nama, nim, jurusan, umur };
+
+                if (editingIndex === -1) {
+                    mahasiswaData.push(mahasiswa);
+                } else {
+                    mahasiswaData[editingIndex] = mahasiswa;
+                    editingIndex = -1;
+                }
+
+                saveToLocalStorage();
+                clearForm();
+                displayMahasiswa();
+            } else {
+                alert("Semua kolom harus diisi!");
+            }
+        }
+
+        // Simpan data ke Local Storage
+        function saveToLocalStorage() {
+            localStorage.setItem('mahasiswaData', JSON.stringify(mahasiswaData));
+        }
+
+        // Tampilkan data mahasiswa dalam tabel
+        function displayMahasiswa(filteredData = mahasiswaData) {
+            const tableBody = document.getElementById('mahasiswaTableBody');
+            tableBody.innerHTML = '';
+
+            filteredData.forEach((mahasiswa, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${mahasiswa.nama}</td>
+                    <td>${mahasiswa.nim}</td>
+                    <td>${mahasiswa.jurusan}</td>
+                    <td>${mahasiswa.umur}</td>
+                    <td>
+                        <button onclick="editMahasiswa(${index})">Edit</button>
+                        <button onclick="deleteMahasiswa(${index})">Hapus</button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Hapus mahasiswa berdasarkan index
+        function deleteMahasiswa(index) {
+            mahasiswaData.splice(index, 1);
+            saveToLocalStorage();
+            displayMahasiswa();
+        }
+
+        // Edit mahasiswa
+        function editMahasiswa(index) {
+            document.getElementById('nama').value = mahasiswaData[index].nama;
+            document.getElementById('nim').value = mahasiswaData[index].nim;
+            document.getElementById('jurusan').value = mahasiswaData[index].jurusan;
+            document.getElementById('umur').value = mahasiswaData[index].umur;
+            editingIndex = index;
+        }
+
+        // Bersihkan form
+        function clearForm() {
+            document.getElementById('nama').value = '';
+            document.getElementById('nim').value = '';
+            document.getElementById('jurusan').value = '';
+            document.getElementById('umur').value = '';
+            editingIndex = -1;
+        }
+
+        // Cari mahasiswa
+        function searchMahasiswa() {
+            const searchQuery = document.getElementById('search').value.toLowerCase();
+            const filteredData = mahasiswaData.filter(mahasiswa => 
+                mahasiswa.nama.toLowerCase().includes(searchQuery) ||
+                mahasiswa.nim.toLowerCase().includes(searchQuery) ||
+                mahasiswa.jurusan.toLowerCase().includes(searchQuery) ||
+                mahasiswa.umur.toString().includes(searchQuery)
+            );
+            displayMahasiswa(filteredData);
+        }
+    </script>
+</body>
+</html>
